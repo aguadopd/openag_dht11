@@ -1,0 +1,69 @@
+/**
+ *  \file sensor_dht11.h
+ *  \brief Sensor module for air temperature and humidity.
+ */
+
+// Library based off: DHT 22/21 library from Seeed Studio and DHT library from Adafruit
+// Libraries found at: https://github.com/adafruit/DHT-sensor-library/ and https://github.com/Seeed-Studio/Grove_Temperature_And_Humidity_Sensor
+// Component found at: https://www.adafruit.com/product/386
+// Modified by: Pablo Aguado, based on Jack Rye's library for DHT22  
+
+#ifndef OPENAG_DHT11_H
+#define OPENAG_DHT11_H
+
+#if ARDUINO >= 100
+ #include "Arduino.h"
+#else
+ #include "WProgram.h"
+#endif
+
+// 8 MHz(ish) AVR ---------------------------------------------------------
+#if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)
+#define COUNT 3
+// 16 MHz(ish) AVR --------------------------------------------------------
+#elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)
+#define COUNT 6
+#else
+#error "CPU SPEED NOT SUPPORTED"
+#endif
+
+// how many timing transitions we need to keep track of. 2 * number bits + extra
+#define MAXTIMINGS 85
+
+#include <openag_module.h>
+#include <std_msgs/Float32.h>
+
+/**
+ *  \brief Sensor module for air temperature and humidity.
+ */
+class Dht11 : public Module {
+  public:
+    // Public Functions
+    Dht11(int pin);
+    void begin();
+    void update();
+    bool get_air_temperature(std_msgs::Float32 &msg);
+    bool get_air_humidity(std_msgs::Float32 &msg);
+
+  private:
+    // Private Functions
+    void getData();
+    bool readSensor();
+
+    // Private Variables
+    int _pin;
+    float _air_temperature;
+    bool _send_air_temperature;
+    float _air_humidity;
+    bool _send_air_humidity;
+    uint32_t _time_of_last_reading;
+    const uint32_t _min_update_interval = 2000;
+
+    uint8_t _data[6];
+    uint8_t _count;
+    uint32_t _last_read_time;
+    bool _first_reading;
+};
+
+#endif // OPENAG_DHT11_H
+
